@@ -1,0 +1,9 @@
+name: Sky
+version: 1.0
+
+main: sky.mc.Sky
+
+commands:
+  Sky: 
+    description: Sky
+    usage: /Sky help  
