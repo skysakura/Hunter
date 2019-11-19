@@ -12,11 +12,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.Inventory;
 
 import sky.mc.util.Colors;
 import sky.mc.util.Messages;
 import sky.mc.util.Utils;
 
+@SuppressWarnings("unused")
 public class Hall {
 	//Hunter Hider Machine Status
 	private String name;
@@ -27,13 +29,19 @@ public class Hall {
 	private Location[] points;
 	private boolean enable = false,start = false;
 	private Timer timer = new Timer();
-	private TimerTask tt;
+	private TimerTask tt,tg;
+	private Listener lis;
 	private int[] machines_p;
+	private Inventory[] ins;
+	private int winner = 0;
+	private int failed = 0;
+	private Player hunter = null;
+	private Player[] hider = new Player[4];
 	public Hall(String name,Location a,Location b,Location[] c,Location[] d,boolean enable)
 	{
 		if(a == null || b == null || c == null || name == null)
 		{
-			new Exception("ÎŞĞ§µÄÓÎÏ·²ÎÊı");
+			new Exception("æ— æ•ˆçš„æ¸¸æˆå‚æ•°");
 		}
 		this.name = name;
 		this.a = a;
@@ -42,6 +50,41 @@ public class Hall {
 		machines_p = new int[c.length];
 		this.points = d;
 		this.enable = enable;
+		for(int i = 0;i <= machines_p.length;i++)
+		{
+			ins[i] = Bukkit.createInventory(null, 54);
+		}
+		reloadInventory();
+		savePlayerData();
+	}
+	
+	/**
+	 * ä¸´æ—¶ä¿å­˜ç©å®¶åŸæœ¬çš„èƒŒåŒ…ï¼Œåæ ‡æ•°æ®
+	 */
+	private void savePlayerData() 
+	{
+		
+	}
+
+	/**
+	 * æ¢å¤ç©å®¶åŸæœ¬çš„æ•°æ®
+	 */
+	private void reloadPlayerData()
+	{
+		
+	}
+	
+	/**
+	 * é‡å¯æ¸¸æˆçš„ç•Œé¢
+	 */
+	private void reloadInventory() 
+	{
+		
+	}
+
+	public void shutDown()
+	{
+		reloadPlayerData();
 	}
 	
 	public boolean isEnable()
@@ -55,12 +98,15 @@ public class Hall {
 	}
 	
 	/*
-	 * ¿ªÊ¼ÓÎÏ·
+	 * å¼€å§‹æ¸¸æˆ
 	 */
 	private void startGame()
 	{
 		start = true;
-		Bukkit.getPluginManager().registerEvents(new PlayerEvent(), Sky.getInstance());
+		lis = new PlayerEvent();
+		Bukkit.getPluginManager().registerEvents(lis, Sky.getInstance());
+		tg = new Task2();
+		timer.schedule(tg, 1000,1000);
 	}
 	
 	public Location[] getPoints()
@@ -75,14 +121,20 @@ public class Hall {
 	
 	private void endGame()
 	{
-		
+		tg.cancel();
+		//Status.playerWin();
 	}
 	
 	protected boolean onPlayerJoin(Player p)
 	{
 		if(players.length == amount || inHall(p))
 		{
-			p.sendMessage(Messages.Prefix + Colors.RED + "¿ÉÄÜÔ­Òò: " + Messages.PlayerInHall + Messages.PlayerMax);
+			p.sendMessage(Messages.Prefix + Colors.RED + "åŠ å…¥å¤±è´¥ï¼Œå¯èƒ½åŸå› : " + Messages.PlayerInHall + Messages.PlayerMax);
+			return false;
+		}
+		if(start)
+		{
+			p.sendMessage(Messages.Prefix + Colors.RED + "è¯¥æ¸¸æˆå·²ç»å¼€å§‹äº†!");
 			return false;
 		}
 		players[amount] = p;
@@ -96,7 +148,7 @@ public class Hall {
 	}
 	
 	/*
-	 * µ±Íæ¼ÒÀë¿ªÓÎÏ·Ê±
+	 * å½“ç©å®¶ç¦»å¼€æ¸¸æˆæ—¶
 	 */
 	protected void onPlayerLeave(Player p)
 	{
@@ -113,12 +165,13 @@ public class Hall {
 				j++;
 			}
 		}
-		p.sendMessage(Messages.Prefix + Colors.GREEN + "ÄãÒÑÀë¿ªÓÎÏ·.");
+		amount--;
+		p.sendMessage(Messages.Prefix + Colors.GREEN + "ä½ å·²ç¦»å¼€æ¸¸æˆ.");
 	}
 	
 	/**
-	 * ÅĞ¶ÏÍæ¼ÒÊÇ·ñÔÚÓÎÏ·³¡ÄÚ
-	 * @param p Íæ¼Ò
+	 * åˆ¤æ–­ç©å®¶æ˜¯å¦åœ¨æ¸¸æˆåœºå†…
+	 * @param p ç©å®¶
 	 * @return boolean
 	 */
 	public boolean inHall(Player p) 
@@ -133,38 +186,57 @@ public class Hall {
 		return false;
 	}
 	
+	/**
+	 * Get the location of this game's first point.
+	 * @return
+	 */
 	public Location getBlockA()
 	{
 		return a;
 	}
 	
+	/**
+	 * Get the location of this game's second point.
+	 * @return
+	 */
 	public Location getBlockB()
 	{
 		return b;
 	}
 	
+	/**
+	 * Get all location of machines that in this game.
+	 * @return Location[]
+	 */
 	public Location[] getMachines()
 	{
 		return machines;
 	}
 
+	/**
+	 * Get this name of this game.
+	 * @return String name
+	 */
 	public String getName() 
 	{
 		return name;
 	}
 	
 	/*
-	 * ×èÖ¹Íæ¼ÒÀë¿ªÓÎÏ·ÇøÓò
+	 * é˜»æ­¢ç©å®¶ç¦»å¼€æ¸¸æˆåŒºåŸŸ
 	 */
 	private class PlayerEvent implements Listener
 	{
 		@EventHandler
 		public void onEvent(PlayerMoveEvent event)
 		{
-			if(!Utils.inArea(a, b, event.getTo()))
+			if(start)
 			{
-				event.getPlayer().sendMessage(Messages.Prefix + Colors.RED + "Äã²»ÄÜÀë¿ªÓÎÏ·ÇøÓò.");
-				event.setCancelled(true);
+				if(!Utils.inArea(a, b, event.getTo()))
+				{
+					event.getPlayer().sendMessage(Messages.Prefix + Colors.RED + "ä½ ä¸èƒ½ç¦»å¼€æ¸¸æˆåŒºåŸŸ.");
+					event.setCancelled(true);
+				}
 			}
 		}
 		
@@ -172,14 +244,16 @@ public class Hall {
 		@EventHandler
 		public void onEvent(PlayerInteractEvent event)
 		{
-			Location p = event.getClickedBlock().getLocation();
-			for(Location l : machines)
+			if(start)
 			{
-				if(p.getBlockX() == l.getBlockX() && p.getBlockY() == l.getBlockY() && p.getBlockZ() == l.getBlockZ())
+				Location p = event.getClickedBlock().getLocation();
+				for(int i = 0;i <= machines.length;i++)
 				{
-					if(event.getAction().name() == Action.RIGHT_CLICK_BLOCK.name() && event.getMaterial().getId() == Material.STONE_BUTTON.getId())
+					Location l = machines[i];
+					if(p.getBlockX() == l.getBlockX() && p.getBlockY() == l.getBlockY() && p.getBlockZ() == l.getBlockZ())
 					{
-						
+						event.getPlayer().openInventory(ins[i]);
+						//Open the machines.
 					}
 				}
 			}
@@ -187,6 +261,9 @@ public class Hall {
 		
 	}
 	
+	/*
+	 * Tell something to players who is in this game.
+	 */
 	public void sendMessage(String msg)
 	{
 		for(Player pl : players)
@@ -196,7 +273,7 @@ public class Hall {
 	}
 	
 	/*
-	 * ÓÎÏ·¿ªÊ¼µ¹¼ÆÊ±
+	 * æ¸¸æˆå¼€å§‹å€’è®¡æ—¶
 	 */
 	private class Task1 extends TimerTask
 	{
@@ -204,12 +281,45 @@ public class Hall {
 		@Override
 		public void run() 
 		{
-			sendMessage(Messages.Prefix + Colors.GREEN + "ÓÎÏ·½«ÔÚ " + Colors.YELLOW + s + Colors.GREEN + " ºó¿ªÊ¼¡£");
+			sendMessage(Messages.Prefix + Colors.GREEN + "æ¸¸æˆå°†åœ¨ " + Colors.YELLOW + s + Colors.GREEN + " åå¼€å§‹ã€‚");
 			s--;
 			if(s == 0)
 			{
 				startGame();
 				tt.cancel();
+			}
+		}
+	}
+	
+	/*
+	 * æ£€æµ‹æ˜¯å¦æ»¡è¶³æ¸¸æˆç»“æŸçš„æ¡ä»¶
+	 */
+	private class Task2 extends TimerTask
+	{
+		@Override
+		public void run() 
+		{
+			//ç›‘ç®¡è€…èƒœåˆ©
+			if(failed == amount - 1)
+			{
+				endGame();
+				Status.playerWin(hunter);
+			}
+			
+			//å¹¸å­˜è€…èƒœåˆ©
+			if(winner == amount - 1)
+			{
+				endGame();
+				for(Player p : hider)
+				{
+					Status.playerWin(p);
+				}
+			}
+			
+			//ç›‘ç®¡è€…æ‰çº¿
+			if(!inHall(hunter) || amount - 1 == 0)
+			{
+				endGame();
 			}
 		}
 	}
