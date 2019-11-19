@@ -15,6 +15,7 @@ import sky.mc.util.Messages;
 
 public class Sky extends JavaPlugin{
 	private static Sky instance;
+	private static SignEvent se = new SignEvent();
 	// <Hall_Name,Hall>
 	private static HashMap<String,Hall> halls = new HashMap<String,Hall>();
 	protected FileConfiguration config = this.getConfig();
@@ -23,6 +24,7 @@ public class Sky extends JavaPlugin{
 	{
 		instance = this;
 		Messages.load();
+		Bukkit.getPluginManager().registerEvents(new SignEvent(), this);
 	}
 	
 	@Override
@@ -66,5 +68,10 @@ public class Sky extends JavaPlugin{
 		}
 		halls.put(hall.getName(), hall);
 		return true;
+	}
+	
+	public static SignEvent getSignEvent()
+	{
+		return se;
 	}
 }
